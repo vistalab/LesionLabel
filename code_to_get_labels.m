@@ -13,7 +13,8 @@ close all
 % lesion volume 
 lesion_info=spm_vol([t1_path lesion_name]); 
 [data_l]=spm_read_vols(lesion_info);
-native_voxel_volume=prod(abs(diag(lesion_info.mat(1:3,1:3))));
+temp=spm_read_hdr([t1_path lesion_name]);
+native_voxel_volume=prod(abs( temp.dime.pixdim(2:4) ));
 native_lesion_volume=native_voxel_volume*length(find(data_l(:)>0));
 native_nrvox=length(find(data_l(:)>0));
 clear data_l
@@ -63,6 +64,10 @@ clear xyz_lesion_talairach xyz_tal data_tal
 
 disp('assigning white matter labels to lesion area')
 
+if ~exist('./standard_data/MNI_JHU_tracts_prob.nii','file')
+    gunzip('./standard_data/MNI_JHU_tracts_prob.nii.gz')
+    disp('unzipping MNI_JHU_tracts_prob.nii.gz such that SPM can read it')
+end
 wm_mni_info=spm_vol('./standard_data/MNI_JHU_tracts_prob.nii'); 
 [data_wm_mni,xyz_wm_mni]=spm_read_vols(wm_mni_info);
 
@@ -229,17 +234,17 @@ fprintf(fid,'%s\n',['gray matter: ' num2str(lesion_out.gray.gray)]);
 fprintf(fid,'%s\n',['white matter: ' num2str(lesion_out.gray.white)]);
 fprintf(fid,'%s\n',['other: ' num2str(lesion_out.gray.other)]);
 
-fprintf(fid,'\n%s\n',['LOBE (voxels and percentile)']);
+fprintf(fid,'\n%s\n',['LOBE (voxels and proportion)']);
 for k=1:length(lesion_out.lobe(:,1))
     fprintf(fid,'%s\n',[lesion_out.lobe{k,1} ': ' num2str(lesion_out.lobe{k,2}) ' voxels ' num2str(lesion_out.lobe{k,2}/lesion_out.nr_voxels)]);
 end
 
-fprintf(fid,'\n%s\n',['GYRUS']);
+fprintf(fid,'\n%s\n',['GYRUS (voxels and proportion)']);
 for k=1:length(lesion_out.gyrus(:,1))
     fprintf(fid,'%s\n',[lesion_out.gyrus{k,1} ': ' num2str(lesion_out.gyrus{k,2}) ' voxels ' num2str(lesion_out.gyrus{k,2}/lesion_out.nr_voxels)]);
 end
 
-fprintf(fid,'\n%s\n',['BRODMANN']);
+fprintf(fid,'\n%s\n',['BRODMANN (voxels and proportion)']);
 for k=1:length(lesion_out.brodmann(:,1))
     fprintf(fid,'%s\n',[lesion_out.brodmann{k,1} ': ' num2str(lesion_out.brodmann{k,2}) ' voxels ' num2str(lesion_out.brodmann{k,2}/lesion_out.nr_voxels)]);
 end
@@ -247,7 +252,7 @@ end
 %%%% following labels from Mori atlas
 fprintf(fid,'\n%s\n',['following labels from Zhang et al., 2008, Neuroimage']);
 
-fprintf(fid,'\n%s\n',['WHITE MATTER TRACTS INVOLVED']);
+fprintf(fid,'\n%s\n',['WHITE MATTER TRACTS INVOLVED (voxels and proportion)']);
 for k=1:length(lesion_out.wmtracts(:,1))
     fprintf(fid,'%s\n',[lesion_out.wmtracts{k,1} ': ' num2str(lesion_out.wmtracts{k,2}) ' voxels ' num2str(lesion_out.wmtracts{k,2}/lesion_out.nr_voxels)]);
 end
